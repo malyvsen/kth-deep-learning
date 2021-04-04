@@ -14,7 +14,11 @@ class Operation:
         bound_args.apply_defaults()
         for argument, value in bound_args.arguments.items():
             setattr(operation, argument, value)
-        output = operation.forward(*args, **kwargs)
+        operation.output = operation.forward(*args, **kwargs)
         for recorder in active_recorders:
-            recorder.register(operation=operation, output=output)
-        return output
+            recorder.register(operation)
+        return operation.output
+
+    def gradients(self, outgoing_gradient: np.ndarray):
+        assert outgoing_gradient.shape == self.output.shape
+        return self.backward(outgoing_gradient)

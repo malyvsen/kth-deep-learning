@@ -13,8 +13,8 @@ class Recorder(AbstractContextManager):
         default_factory=dict
     )  # mapping from tensor id to the operation which created it
 
-    def register(self, *, operation, output: Tensor):
-        self.tensor_sources[output.id] = operation
+    def register(self, operation):
+        self.tensor_sources[operation.output.id] = operation
 
     def gradients(self, scalar: Tensor) -> Dict[int, np.ndarray]:
         assert all(dim == 1 for dim in scalar.shape)
@@ -22,7 +22,7 @@ class Recorder(AbstractContextManager):
             raise ValueError("Cannot find gradients of untracked tensor")
         return self._gradients(
             tensor_id=scalar.id,
-            outgoing_gradient=np.array([1], dtype=np.float32),
+            outgoing_gradient=np.array(1, dtype=np.float32),
         )
 
     def _gradients(
@@ -33,7 +33,7 @@ class Recorder(AbstractContextManager):
         if tensor_id not in self.tensor_sources:
             return result
         for connected_tensor_id, connected_gradient in (
-            self.tensor_sources[tensor_id].backward(outgoing_gradient).items()
+            self.tensor_sources[tensor_id].gradients(outgoing_gradient).items()
         ):
             incoming_gradients = self._gradients(
                 tensor_id=connected_tensor_id, outgoing_gradient=connected_gradient
