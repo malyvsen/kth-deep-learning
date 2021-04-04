@@ -17,12 +17,13 @@ def test_list():
     ) == Tensor.from_builtin([4, 1.5])
 
 
-def test_backward():
+def test_gradients():
     add = Add()
-    add.left = Tensor.from_builtin(2)
-    add.right = Tensor.from_builtin(3)
+    add.left = Tensor.from_builtin([2, 3, 4])
+    add.right = Tensor.from_builtin([3, 2, 1])
+    add.output = Tensor.from_builtin([5, 5, 5])
     outgoing_gradient = np.array([1, 2, 3])
-    computed_gradient = add.backward(outgoing_gradient)
+    computed_gradient = add.gradients(outgoing_gradient)
     assert computed_gradient.keys() == {add.left.id, add.right.id}
     assert np.all(computed_gradient[add.left.id] == outgoing_gradient)
     assert np.all(computed_gradient[add.right.id] == outgoing_gradient)

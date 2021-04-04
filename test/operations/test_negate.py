@@ -15,10 +15,11 @@ def test_list():
     assert -Tensor.from_builtin([-1, 2.5]) == Tensor.from_builtin([1, -2.5])
 
 
-def test_backward():
+def test_gradients():
     negate = Negate()
-    negate.tensor = Tensor.from_builtin(2)
+    negate.tensor = Tensor.from_builtin([2, 3, 4])
+    negate.output = Tensor.from_builtin([-2, -3, -4])
     outgoing_gradient = np.array([1, 2, 3])
-    computed_gradient = negate.backward(outgoing_gradient)
+    computed_gradient = negate.gradients(outgoing_gradient)
     assert computed_gradient.keys() == {negate.tensor.id}
     assert np.all(computed_gradient[negate.tensor.id] == -outgoing_gradient)
