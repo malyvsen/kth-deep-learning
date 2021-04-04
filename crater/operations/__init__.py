@@ -6,3 +6,4 @@ from .log import Log, log
 from .multiply import Multiply
 from .negate import Negate
 from .subtract import Subtract
+from .sum import Sum, sum
