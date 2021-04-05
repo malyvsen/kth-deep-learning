@@ -27,6 +27,6 @@ class Tensor:
         return self.data.shape
 
     def __eq__(self, other):
-        return np.all(self.data == other.data)
+        return np.all(self.data == other.data) and self.shape == other.shape
 
     __hash__ = None
