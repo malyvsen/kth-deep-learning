@@ -2,13 +2,11 @@ from typing import Tuple
 import numpy as np
 from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
+from crater.utils import tuplify
 
 
 def expand_dims(tensor: Tensor, axes: Tuple[int]):
-    try:
-        axes = tuple(axes)
-    except TypeError:
-        pass
+    axes = tuplify(axes)
     return Tensor.from_numpy(
         data=np.expand_dims(tensor.data, axes),
         backward=lambda gradient: Gradients.accumulate(
