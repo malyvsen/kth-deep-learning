@@ -5,6 +5,7 @@ from crater.gradient import Gradients, Gradient
 
 
 def tile(tensor: Tensor, tiling: Tuple[int]):
+    tiling = tuple(tiling)
     assert len(tensor.shape) == len(tiling)
     return Tensor.from_numpy(
         data=np.tile(tensor.data, tiling),

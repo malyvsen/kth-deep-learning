@@ -5,6 +5,10 @@ from crater.gradient import Gradients, Gradient
 
 
 def expand_dims(tensor: Tensor, axes: Tuple[int]):
+    try:
+        axes = tuple(axes)
+    except TypeError:
+        pass
     return Tensor.from_numpy(
         data=np.expand_dims(tensor.data, axes),
         backward=lambda gradient: Gradients.accumulate(
