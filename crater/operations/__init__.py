@@ -8,5 +8,6 @@ from .matrix_multiply import matrix_multiply
 from .multiply import multiply
 from .negate import negate
 from .subtract import subtract
+from .softmax import softmax
 from .sum import sum
 from .tile import tile
