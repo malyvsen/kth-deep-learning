@@ -8,10 +8,14 @@ def test_train_step():
     weights = Tensor.from_builtin([[2, 0], [1, 1], [0, 3]])
     biases = Tensor.from_builtin([-2, -7])
 
-    logits = matrix_multiply(data, weights) + biases
-    probabilities = logits.softmax(-1)
-    loss = -(probabilities.log() * targets).sum()
-    gradients = Gradients.trace(loss)
+    def compute_loss():
+        logits = matrix_multiply(data, weights) + biases
+        probabilities = logits.softmax(-1)
+        return -(probabilities.log() * targets).sum()
 
+    loss = compute_loss()
+    gradients = Gradients.trace(loss)
     weights -= Tensor.from_numpy(gradients[weights])
     biases -= Tensor.from_numpy(gradients[biases])
+
+    assert compute_loss().data < loss.data
