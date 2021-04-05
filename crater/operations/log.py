@@ -10,3 +10,6 @@ def log(tensor: Tensor):
             Gradient(tensor=tensor, gradient=gradient / tensor.data)
         ),
     )
+
+
+Tensor.log = log

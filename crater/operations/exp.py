@@ -10,3 +10,6 @@ def exp(tensor: Tensor):
             Gradient(tensor=tensor, gradient=gradient * np.exp(tensor.data))
         ),
     )
+
+
+Tensor.exp = exp

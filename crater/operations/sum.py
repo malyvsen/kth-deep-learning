@@ -10,3 +10,6 @@ def sum(tensor: Tensor):
             Gradient(tensor=tensor, gradient=np.full_like(tensor.data, gradient))
         ),
     )
+
+
+Tensor.sum = sum
