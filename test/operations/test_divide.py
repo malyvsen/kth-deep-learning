@@ -16,6 +16,12 @@ def test_list():
     ) == Tensor.from_builtin([2, 1.25])
 
 
+def test_broadcast():
+    assert Tensor.from_builtin(2) / Tensor.from_builtin([1, 2]) == Tensor.from_builtin(
+        [2, 1]
+    )
+
+
 def test_gradients():
     left = Tensor.from_builtin([2, 3, 4])
     right = Tensor.from_builtin([3, 2, 1])
