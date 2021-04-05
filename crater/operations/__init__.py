@@ -1,4 +1,5 @@
 from .add import add
+from .divide import divide
 from .exp import exp
 from .log import log
 from .matrix_multiply import matrix_multiply
