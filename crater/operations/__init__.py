@@ -7,3 +7,4 @@ from .multiply import multiply
 from .negate import negate
 from .subtract import subtract
 from .sum import sum
+from .tile import tile
