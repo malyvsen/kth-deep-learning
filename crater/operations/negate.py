@@ -1,16 +1,14 @@
-import numpy as np
 from crater.tensor import Tensor
-from .operation import Operation
+from crater.gradient import Gradients, Gradient
 
 
-class Negate(Operation):
-    def forward(self, tensor: Tensor):
-        return Tensor.from_numpy(-tensor.data)
+def negate(tensor: Tensor):
+    return Tensor.from_numpy(
+        data=-tensor.data,
+        backward=lambda gradient: Gradients.accumulate(
+            Gradient(tensor=tensor, gradient=-gradient)
+        ),
+    )
 
-    def backward(self, gradients: np.ndarray):
-        return {
-            self.tensor.id: -gradients,
-        }
 
-
-Tensor.__neg__ = lambda tensor: Negate.apply(tensor)
+Tensor.__neg__ = negate

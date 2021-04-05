@@ -1,6 +1,5 @@
 import numpy as np
 from crater import Tensor
-from crater.operations import Negate
 
 
 def test_int():
@@ -16,10 +15,7 @@ def test_list():
 
 
 def test_gradients():
-    negate = Negate()
-    negate.tensor = Tensor.from_builtin([2, 3, 4])
-    negate.output = Tensor.from_builtin([-2, -3, -4])
-    outgoing_gradient = np.array([1, 2, 3])
-    computed_gradient = negate.gradients(outgoing_gradient)
-    assert computed_gradient.keys() == {negate.tensor.id}
-    assert np.all(computed_gradient[negate.tensor.id] == -outgoing_gradient)
+    tensor = Tensor.from_builtin([2, 3, 4])
+    result = -tensor
+    gradients = result.backward(np.array([1, 2, 3]))
+    assert np.all(gradients[tensor] == [-1, -2, -3])

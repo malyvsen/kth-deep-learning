@@ -1,6 +1,6 @@
 import numpy as np
 from crater import Tensor
-from crater.operations import Log, log
+from crater.operations import log
 
 
 def test_e():
@@ -8,10 +8,7 @@ def test_e():
 
 
 def test_gradients():
-    log = Log()
-    log.tensor = Tensor.from_builtin([2, 3, 4])
-    log.output = Tensor.from_numpy(np.log([2, 3, 4]))
-    outgoing_gradient = np.array([1, 2, 3])
-    computed_gradient = log.gradients(outgoing_gradient)
-    assert computed_gradient.keys() == {log.tensor.id}
-    assert np.all(computed_gradient[log.tensor.id] == outgoing_gradient / [2, 3, 4])
+    tensor = Tensor.from_builtin([2, 3, 4])
+    result = log(tensor)
+    gradients = result.backward(np.array([1, 2, 3]))
+    assert np.all(gradients[tensor] == np.array([1 / 2, 2 / 3, 3 / 4]))

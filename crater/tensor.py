@@ -1,3 +1,4 @@
+from typing import Union, Callable
 from dataclasses import dataclass
 import numpy as np
 
@@ -5,21 +6,21 @@ import numpy as np
 @dataclass(frozen=True)
 class Tensor:
     data: np.ndarray
+    backward: Union[None, Callable]
 
-    def __init__(self, data: np.ndarray):
-        assert data.flags.writeable == False
-        self.__dict__.update(dict(data=data))
+    def __post_init__(self):
+        assert self.data.flags.writeable == False
 
     @classmethod
-    def from_numpy(cls, data: np.ndarray):
+    def from_numpy(cls, data: np.ndarray, backward=None):
         if data.flags.writeable:
             data = data.copy()
             data.flags.writeable = False
-        return cls(data=data)
+        return cls(data=data, backward=backward)
 
     @classmethod
-    def from_builtin(cls, data):
-        return cls.from_numpy(np.array(data))
+    def from_builtin(cls, data, backward=None):
+        return cls.from_numpy(np.array(data), backward=backward)
 
     @property
     def shape(self):
@@ -27,9 +28,5 @@ class Tensor:
 
     def __eq__(self, other):
         return np.all(self.data == other.data)
-
-    @property
-    def id(self) -> int:
-        return id(self)
 
     __hash__ = None

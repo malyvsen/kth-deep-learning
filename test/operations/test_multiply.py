@@ -1,6 +1,5 @@
 import numpy as np
 from crater import Tensor
-from crater.operations import Multiply
 
 
 def test_int():
@@ -18,12 +17,9 @@ def test_list():
 
 
 def test_gradients():
-    multiply = Multiply()
-    multiply.left = Tensor.from_builtin([2, 3, 4])
-    multiply.right = Tensor.from_builtin([3, 2, 1])
-    multiply.output = Tensor.from_builtin([5, 5, 5])
-    outgoing_gradient = np.array([1, 2, 3])
-    computed_gradient = multiply.gradients(outgoing_gradient)
-    assert computed_gradient.keys() == {multiply.left.id, multiply.right.id}
-    assert np.all(computed_gradient[multiply.left.id] == outgoing_gradient * [3, 2, 1])
-    assert np.all(computed_gradient[multiply.right.id] == outgoing_gradient * [2, 3, 4])
+    left = Tensor.from_builtin([2, 3, 4])
+    right = Tensor.from_builtin([3, 2, 1])
+    result = left * right
+    gradients = result.backward(np.array([1, 2, 3]))
+    assert np.all(gradients[left] == [3, 4, 3])
+    assert np.all(gradients[right] == [2, 6, 12])

@@ -1,10 +1,8 @@
-from .operation import Operation
-
-from .add import Add
-from .exp import Exp, exp
-from .log import Log, log
-from .matrix_multiply import MatrixMultiply, matrix_multiply
-from .multiply import Multiply
-from .negate import Negate
-from .subtract import Subtract
-from .sum import Sum, sum
+from .add import add
+from .exp import exp
+from .log import log
+from .matrix_multiply import matrix_multiply
+from .multiply import multiply
+from .negate import negate
+from .subtract import subtract
+from .sum import sum

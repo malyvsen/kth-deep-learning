@@ -1,16 +1,12 @@
 import numpy as np
 from crater.tensor import Tensor
-from .operation import Operation
+from crater.gradient import Gradients, Gradient
 
 
-class Exp(Operation):
-    def forward(self, tensor: Tensor):
-        return Tensor.from_numpy(np.exp(tensor.data))
-
-    def backward(self, gradients: np.ndarray):
-        return {
-            self.tensor.id: gradients * self.output.data,
-        }
-
-
-exp = lambda tensor: Exp.apply(tensor)
+def exp(tensor: Tensor):
+    return Tensor.from_numpy(
+        data=np.exp(tensor.data),
+        backward=lambda gradient: Gradients.accumulate(
+            Gradient(tensor=tensor, gradient=gradient * np.exp(tensor.data))
+        ),
+    )
