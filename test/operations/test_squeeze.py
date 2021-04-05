@@ -2,6 +2,10 @@ import numpy as np
 from crater import Tensor
 
 
+def test_none():
+    assert Tensor.from_builtin([-1, 2]).squeeze() == Tensor.from_builtin([-1, 2])
+
+
 def test_single():
     assert Tensor.from_builtin([[-1, 2]]).squeeze(0) == Tensor.from_builtin([-1, 2])
     assert Tensor.from_builtin([[-1], [2]]).squeeze(1) == Tensor.from_builtin([-1, 2])

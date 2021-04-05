@@ -5,7 +5,7 @@ from crater.gradient import Gradients, Gradient
 from crater.utils import tuplify
 
 
-def squeeze(tensor: Tensor, axes: Union[None, int, Tuple[int]]):
+def squeeze(tensor: Tensor, axes: Union[None, int, Tuple[int]] = None):
     axes = () if axes is None else tuplify(axes)
     return Tensor.from_numpy(
         data=np.squeeze(tensor.data, axes),
