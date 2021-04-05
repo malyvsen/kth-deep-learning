@@ -11,6 +11,11 @@ def test_specific():
     assert Tensor.from_builtin([[1, 4], [5, 0]]).sum(1) == Tensor.from_builtin([5, 5])
 
 
+def test_negative():
+    assert Tensor.from_builtin([[1, 4], [5, 0]]).sum(-2) == Tensor.from_builtin([6, 4])
+    assert Tensor.from_builtin([[1, 4], [5, 0]]).sum(-1) == Tensor.from_builtin([5, 5])
+
+
 def test_gradients_full():
     tensor = Tensor.from_builtin([2, 3, 4])
     result = tensor.sum()
@@ -21,5 +26,12 @@ def test_gradients_full():
 def test_gradients_specific():
     tensor = Tensor.from_builtin([[5, 2], [9, 1]])
     result = tensor.sum(1)
+    gradients = result.backward(np.array([1, 3]))
+    assert np.all(gradients[tensor] == [[1, 1], [3, 3]])
+
+
+def test_gradients_negative():
+    tensor = Tensor.from_builtin([[5, 2], [9, 1]])
+    result = tensor.sum(-1)
     gradients = result.backward(np.array([1, 3]))
     assert np.all(gradients[tensor] == [[1, 1], [3, 3]])

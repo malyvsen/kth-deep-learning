@@ -13,7 +13,10 @@ def sum(tensor: Tensor, axes=None):
                 tensor=tensor,
                 gradient=np.tile(
                     np.expand_dims(gradient, axes),
-                    [dim if idx in axes else 1 for idx, dim in enumerate(tensor.shape)],
+                    [
+                        dim if idx in axes or idx - len(tensor.shape) in axes else 1
+                        for idx, dim in enumerate(tensor.shape)
+                    ],
                 ),
             )
         ),
