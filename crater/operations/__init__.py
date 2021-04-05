@@ -9,5 +9,6 @@ from .multiply import multiply
 from .negate import negate
 from .subtract import subtract
 from .softmax import softmax
+from .squeeze import squeeze
 from .sum import sum
 from .tile import tile
