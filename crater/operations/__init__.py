@@ -1,6 +1,7 @@
 from .add import add
 from .divide import divide
 from .exp import exp
+from .expand_dims import expand_dims
 from .log import log
 from .matrix_multiply import matrix_multiply
 from .multiply import multiply
