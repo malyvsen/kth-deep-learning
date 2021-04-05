@@ -1,9 +1,10 @@
 from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
+from .broadcast import broadcast
 
 
 def subtract(left: Tensor, right: Tensor):
-    assert left.shape == right.shape
+    left, right = broadcast(left, right)
     return Tensor.from_numpy(
         data=left.data - right.data,
         backward=lambda gradient: Gradients.accumulate(

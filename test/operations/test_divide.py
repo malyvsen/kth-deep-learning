@@ -1,5 +1,5 @@
 import numpy as np
-from crater import Tensor
+from crater import Tensor, Gradients, Gradient
 
 
 def test_int():
@@ -20,6 +20,6 @@ def test_gradients():
     left = Tensor.from_builtin([2, 3, 4])
     right = Tensor.from_builtin([3, 2, 1])
     result = left / right
-    gradients = result.backward(np.array([1, 2, 3]))
+    gradients = Gradients._trace(Gradient(tensor=result, gradient=np.array([1, 2, 3])))
     assert np.allclose(gradients[left], [1 / 3, 2 / 2, 3 / 1])
     assert np.allclose(gradients[right], [-2 / 9, -6 / 4, -12 / 1])
