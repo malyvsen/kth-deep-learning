@@ -1,4 +1,5 @@
 from .add import add
+from .broadcast import broadcast
 from .divide import divide
 from .exp import exp
 from .expand_dims import expand_dims
