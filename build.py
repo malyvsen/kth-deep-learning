@@ -27,3 +27,15 @@ with tempfile.TemporaryDirectory() as temp_dir:
             saved_script.as_posix(),
         ]
     )
+
+with saved_script.open("r") as script:
+    code = script.read()
+
+with saved_script.open("w") as script:
+    script.write(
+        "# This file is auto-generated from multiple files, because my code is a package.\n"
+    )
+    script.write(
+        "# I'll gladly give read access to the repository on GitHub, which should be more readable.\n"
+    )
+    script.write(code)
