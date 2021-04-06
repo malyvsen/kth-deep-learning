@@ -3,9 +3,11 @@ import numpy as np
 from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
 from crater.utils import tuplify
+from .coalesce import coalesce
 
 
 def squeeze(tensor: Tensor, axes: Union[None, int, Tuple[int]] = None):
+    tensor = coalesce(tensor)
     axes = () if axes is None else tuplify(axes)
     return Tensor.from_numpy(
         data=np.squeeze(tensor.data, axes),

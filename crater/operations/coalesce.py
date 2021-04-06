@@ -1,10 +1,9 @@
-from typing import Tuple
 import numpy as np
 from crater.tensor import Tensor
-from crater.gradient import Gradients, Gradient
 
 
-def broadcast(*tensors: Tensor):
+def coalesce(*tensors: Tensor):
+    tensors = [Tensor.convert(tensor) for tensor in tensors]
     if len(tensors) == 1:
         return tensors[0]
     target_shape = np.broadcast(*[tensor.data for tensor in tensors]).shape

@@ -3,17 +3,19 @@ from crater import Tensor, Gradients, Gradient
 
 
 def test_int():
-    assert Tensor.from_builtin(2) + Tensor.from_builtin(3) == Tensor.from_builtin(5)
+    assert Tensor.from_builtin(2) + 3 == Tensor.from_builtin(5)
 
 
 def test_float():
-    assert Tensor.from_builtin(2.5) + Tensor.from_builtin(3) == Tensor.from_builtin(5.5)
+    assert Tensor.from_builtin(2) + 3.5 == Tensor.from_builtin(5.5)
 
 
 def test_list():
-    assert Tensor.from_builtin([1, 2.5]) + Tensor.from_builtin(
-        [3, -1]
-    ) == Tensor.from_builtin([4, 1.5])
+    assert Tensor.from_builtin([1, 2.5]) + [3, -1] == Tensor.from_builtin([4, 1.5])
+
+
+def test_tensor():
+    assert Tensor.from_builtin(-1) + Tensor.from_builtin(13) == Tensor.from_builtin(12)
 
 
 def test_broadcast():

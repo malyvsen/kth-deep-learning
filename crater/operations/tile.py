@@ -2,9 +2,11 @@ from typing import Tuple
 import numpy as np
 from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
+from .coalesce import coalesce
 
 
 def tile(tensor: Tensor, tiling: Tuple[int]):
+    tensor = coalesce(tensor)
     tiling = tuple(tiling)
     assert len(tensor.shape) == len(tiling)
     return Tensor.from_numpy(

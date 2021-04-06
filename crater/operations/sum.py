@@ -2,9 +2,11 @@ import numpy as np
 from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
 from crater.utils import tuplify
+from .coalesce import coalesce
 
 
 def sum(tensor: Tensor, axes=None):
+    tensor = coalesce(tensor)
     axes = tuplify(range(len(tensor.shape)) if axes is None else axes)
     return Tensor.from_numpy(
         data=tensor.data.sum(axes),

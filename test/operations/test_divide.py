@@ -3,17 +3,19 @@ from crater import Tensor, Gradients, Gradient
 
 
 def test_int():
-    assert Tensor.from_builtin(2) / Tensor.from_builtin(4) == Tensor.from_builtin(0.5)
+    assert Tensor.from_builtin(2) / 4 == Tensor.from_builtin(0.5)
 
 
 def test_float():
-    assert Tensor.from_builtin(2.5) / Tensor.from_builtin(0.5) == Tensor.from_builtin(5)
+    assert Tensor.from_builtin(2.5) / 0.5 == Tensor.from_builtin(5)
 
 
 def test_list():
-    assert Tensor.from_builtin([1, 2.5]) / Tensor.from_builtin(
-        [0.5, 2]
-    ) == Tensor.from_builtin([2, 1.25])
+    assert Tensor.from_builtin([1, 2.5]) / [0.5, 2] == Tensor.from_builtin([2, 1.25])
+
+
+def test_tensor():
+    assert Tensor.from_builtin(4) / Tensor.from_builtin(2) == Tensor.from_builtin(2)
 
 
 def test_broadcast():

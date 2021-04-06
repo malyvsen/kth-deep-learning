@@ -1,7 +1,7 @@
 import numpy as np
 from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
-from .broadcast import broadcast
+from .coalesce import coalesce
 
 
 def clip(tensor: Tensor, low=None, high=None):
@@ -9,7 +9,7 @@ def clip(tensor: Tensor, low=None, high=None):
         low = -float("inf")
     if high is None:
         high = float("inf")
-    tensor, low, high = broadcast(tensor, Tensor.convert(low), Tensor.convert(high))
+    tensor, low, high = coalesce(tensor, low, high)
 
     def backward(gradient: np.ndarray):
         result = gradient.copy()

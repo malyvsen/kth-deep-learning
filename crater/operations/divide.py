@@ -1,11 +1,11 @@
 import numpy as np
 from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
-from .broadcast import broadcast
+from .coalesce import coalesce
 
 
 def divide(left: Tensor, right: Tensor):
-    left, right = broadcast(left, right)
+    left, right = coalesce(left, right)
     return Tensor.from_numpy(
         data=left.data / right.data,
         backward=lambda gradient: Gradients.accumulate(
