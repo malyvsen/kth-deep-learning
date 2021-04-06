@@ -19,3 +19,4 @@ def divide(left: Tensor, right: Tensor):
 
 
 Tensor.__truediv__ = divide
+Tensor.__rtruediv__ = lambda right, left: divide(left, right)

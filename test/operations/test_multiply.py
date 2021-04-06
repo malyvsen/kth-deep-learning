@@ -14,6 +14,10 @@ def test_list():
     assert Tensor.from_builtin([1, 2.5]) * [3, -1] == Tensor.from_builtin([3, -2.5])
 
 
+def test_righthand():
+    assert [3, -1] * Tensor.from_builtin([1, 2.5]) == Tensor.from_builtin([3, -2.5])
+
+
 def test_tensor():
     assert Tensor.from_builtin([1, 2.5]) * Tensor.from_builtin(
         [3, -1]

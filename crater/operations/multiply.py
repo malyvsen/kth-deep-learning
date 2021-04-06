@@ -15,3 +15,4 @@ def multiply(left: Tensor, right: Tensor):
 
 
 Tensor.__mul__ = multiply
+Tensor.__rmul__ = lambda right, left: multiply(left, right)

@@ -14,6 +14,10 @@ def test_list():
     assert Tensor.from_builtin([1, 2.5]) / [0.5, 2] == Tensor.from_builtin([2, 1.25])
 
 
+def test_righthand():
+    assert [1, 2.5] / Tensor.from_builtin([0.5, 2]) == Tensor.from_builtin([2, 1.25])
+
+
 def test_tensor():
     assert Tensor.from_builtin(4) / Tensor.from_builtin(2) == Tensor.from_builtin(2)
 

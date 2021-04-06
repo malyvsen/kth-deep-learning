@@ -15,3 +15,4 @@ def add(left: Tensor, right: Tensor):
 
 
 Tensor.__add__ = add
+Tensor.__radd__ = lambda right, left: add(left, right)

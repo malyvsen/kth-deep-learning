@@ -15,3 +15,4 @@ def subtract(left: Tensor, right: Tensor):
 
 
 Tensor.__sub__ = subtract
+Tensor.__rsub__ = lambda right, left: subtract(left, right)
