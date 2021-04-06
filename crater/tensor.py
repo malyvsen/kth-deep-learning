@@ -22,6 +22,15 @@ class Tensor:
     def from_builtin(cls, data, backward=None):
         return cls.from_numpy(np.array(data), backward=backward)
 
+    @classmethod
+    def convert(cls, thing):
+        """Convert anything to a tensor, if not already a tensor"""
+        if isinstance(thing, cls):
+            return thing
+        if isinstance(thing, np.ndarray):
+            return cls.from_numpy(thing)
+        return cls.from_builtin(thing)
+
     @property
     def shape(self):
         return self.data.shape

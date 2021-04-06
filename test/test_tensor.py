@@ -47,3 +47,10 @@ def test_read_only():
     with pytest.raises(ValueError):
         tensor = Tensor.from_builtin([1, 2, 3])
         tensor.data[1] = 3
+
+
+def test_convert():
+    tensor = Tensor.convert([1, 2])
+    assert tensor == Tensor.from_numpy(np.array([1, 2]))
+    assert tensor == Tensor.from_builtin([1, 2])
+    assert tensor is Tensor.convert(tensor)
