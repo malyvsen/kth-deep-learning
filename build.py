@@ -36,6 +36,6 @@ with saved_script.open("w") as script:
         "# This file is auto-generated from multiple files, because my code is a package.\n"
     )
     script.write(
-        "# I'll gladly give read access to the repository on GitHub, which should be more readable.\n"
+        "# To look at the code the way it's meant to be looked at, visit https://github.com/malyvsen/kth-deep-learning\n"
     )
     script.write(code)
