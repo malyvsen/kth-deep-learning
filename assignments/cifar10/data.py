@@ -11,8 +11,10 @@ def load_batch(filename: str):
     return dict(data=result[b"data"], labels=result[b"labels"])
 
 
-def normalize_data(data: np.ndarray):
-    return Tensor.from_numpy((data - data_mean) / data_std)
+def make_normalizer(train_features: np.ndarray):
+    mean = np.mean(train_features)
+    std = np.std(train_features)
+    return lambda features: Tensor.from_numpy((features - mean) / std)
 
 
 def vector_to_image(*vectors: np.ndarray):
@@ -33,14 +35,3 @@ def vector_to_image(*vectors: np.ndarray):
     return Image.fromarray(
         (np.moveaxis(concatenated, 0, -1) * 255).astype(np.uint8)
     ).resize([dim * 2 for dim in concatenated.shape[1:][::-1]], resample=Image.NEAREST)
-
-
-data = dict(
-    train=load_batch("data_batch_1"),
-    validation=load_batch("data_batch_2"),
-    test=load_batch("test_batch"),
-)
-
-
-data_mean = np.mean(data["train"]["data"])
-data_std = np.std(data["train"]["data"])

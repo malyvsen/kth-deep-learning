@@ -2,18 +2,18 @@ import numpy as np
 from crater import Tensor, Gradients
 from crater.operations import matrix_multiply
 from crater.utils import one_hot
-from .data import normalize_data
 
 
 class Classifier:
-    def __init__(self):
+    def __init__(self, normalize):
+        self.normalize = normalize
         self.weights = Tensor.from_numpy(
             np.random.normal(scale=0.01, size=[32 * 32 * 3, 10])
         )
         self.biases = Tensor.from_numpy(np.random.normal(scale=0.01, size=[10]))
 
     def logits(self, data):
-        return matrix_multiply(normalize_data(data), self.weights) + self.biases
+        return matrix_multiply(self.normalize(data), self.weights) + self.biases
 
     def probabilities(self, data):
         return self.logits(data).softmax(-1)
