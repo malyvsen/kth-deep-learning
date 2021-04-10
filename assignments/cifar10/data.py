@@ -8,7 +8,7 @@ from crater import Tensor
 def load_batch(filename: str):
     with (Path("../data") / filename).open("rb") as file:
         result = pickle.load(file, encoding="bytes")
-    return dict(data=result[b"data"], labels=result[b"labels"])
+    return dict(features=result[b"data"], labels=result[b"labels"])
 
 
 def make_normalizer(train_features: np.ndarray):

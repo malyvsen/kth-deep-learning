@@ -21,10 +21,10 @@ class Classifier:
     def loss(self, batch, regularization):
         cross_entropy = -(
             (
-                self.probabilities(batch["data"]).log()
+                self.probabilities(batch["features"]).log()
                 * one_hot(batch["labels"], num_classes=10)
             ).sum()
-            / Tensor.from_builtin(len(batch["data"]))
+            / Tensor.from_builtin(len(batch["features"]))
         )
         penalty = (self.weights * self.weights).sum() * Tensor.from_builtin(
             regularization
@@ -38,7 +38,7 @@ class Classifier:
         return np.argmax(self.logits(data).data, axis=-1)
 
     def accuracy(self, batch):
-        return np.mean(self.predictions(batch["data"]) == batch["labels"])
+        return np.mean(self.predictions(batch["features"]) == batch["labels"])
 
     def train_step(self, batch, regularization, learning_rate):
         gradients = self.gradients(batch, regularization)

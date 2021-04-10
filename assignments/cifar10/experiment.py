@@ -28,7 +28,7 @@ class Experiment:
         for epoch in trange(num_epochs):
             train_epoch(
                 classifier=classifier,
-                data=data,
+                train_data=data["train"],
                 num_per_batch=num_per_batch,
                 learning_rate=learning_rate,
                 regularization=regularization,
@@ -89,11 +89,11 @@ class Experiment:
         return vector_to_image(*self.classifier.weights.data.T)
 
 
-def train_epoch(data, classifier, num_per_batch, learning_rate, regularization):
-    for start_idx in range(0, len(data["train"]["data"]), num_per_batch):
+def train_epoch(train_data, classifier, num_per_batch, learning_rate, regularization):
+    for start_idx in range(0, len(train_data["features"]), num_per_batch):
         batch = {
             name: array[start_idx : start_idx + num_per_batch]
-            for name, array in data["train"].items()
+            for name, array in train_data.items()
         }
         classifier.train_step(
             batch, regularization=regularization, learning_rate=learning_rate
