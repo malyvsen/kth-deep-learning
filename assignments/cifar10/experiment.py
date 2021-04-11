@@ -1,6 +1,5 @@
-from typing import List
+from typing import Union, List, Callable
 from dataclasses import dataclass
-from itertools import cycle
 from tqdm.auto import trange
 import plotly.graph_objects as go
 from .data import vector_to_image
@@ -20,22 +19,27 @@ class Experiment:
         classifier: Classifier,
         num_batches: int = 256,
         num_per_batch: int = 64,
-        learning_rate: float = 1e-3,
+        learning_rate: Union[float, Callable[[int], float]] = 1e-3,
         regularization: float = 1e-3,
     ):
         losses = []
         accuracies = []
 
-        for start_idx, batch_idx in zip(
-            cycle(range(0, len(data["train"]["features"]), num_per_batch)),
-            trange(num_batches),
-        ):
+        for batch_idx in trange(num_batches):
+            num_examples_seen = batch_idx * num_per_batch
+            start_idx = num_examples_seen % len(data["train"]["features"])
             batch = {
                 name: array[start_idx : start_idx + num_per_batch]
                 for name, array in data["train"].items()
             }
             classifier = classifier.train_step(
-                batch, regularization=regularization, learning_rate=learning_rate
+                batch,
+                regularization=regularization,
+                learning_rate=(
+                    learning_rate(num_examples_seen)
+                    if callable(learning_rate)
+                    else learning_rate
+                ),
             )
             losses.append(
                 {
