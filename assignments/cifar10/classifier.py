@@ -35,7 +35,9 @@ class Classifier:
         )
 
     def logits(self, data):
-        return reduce(lambda tensor, layer: layer(tensor), self.layers, data)
+        return reduce(
+            lambda tensor, layer: layer(tensor), self.layers, self.normalize(data)
+        )
 
     def probabilities(self, data):
         return self.logits(data).softmax(-1)
