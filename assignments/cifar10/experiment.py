@@ -1,9 +1,10 @@
-from typing import Union, Dict, Callable
+from typing import Dict
 from dataclasses import dataclass
 from tqdm.auto import trange
 import plotly.graph_objects as go
 from .data import vector_to_image
 from .classifier import Classifier
+from .learning_rate import CyclicLearningRate
 
 
 @dataclass(frozen=True)
@@ -17,30 +18,27 @@ class Experiment:
         cls,
         data,
         classifier: Classifier,
-        num_batches: int = 256,
-        num_per_batch: int = 64,
-        learning_rate: Union[float, Callable[[int], float]] = 1e-3,
+        learning_rate: CyclicLearningRate,
+        num_cycles: int = 1,
+        batches_per_measurement: int = 10,
+        batch_size: int = 100,
         regularization: float = 1e-3,
     ):
         losses = {}
         accuracies = {}
 
-        for batch_idx in trange(num_batches):
-            start_idx = (batch_idx * num_per_batch) % len(data["train"]["features"])
+        for batch_idx in trange(learning_rate.batches_per_cycle * num_cycles):
+            start_idx = (batch_idx * batch_size) % len(data["train"]["features"])
             batch = {
-                name: array[start_idx : start_idx + num_per_batch]
+                name: array[start_idx : start_idx + batch_size]
                 for name, array in data["train"].items()
             }
             classifier = classifier.train_step(
                 batch,
                 regularization=regularization,
-                learning_rate=(
-                    learning_rate(batch_idx)
-                    if callable(learning_rate)
-                    else learning_rate
-                ),
+                learning_rate=learning_rate.learning_rate(batch_idx),
             )
-            if batch_idx % 10 == 0:
+            if batch_idx % batches_per_measurement == 0:
                 losses[batch_idx] = {
                     split_name: classifier.loss(
                         split, regularization=regularization
@@ -81,10 +79,10 @@ class Experiment:
         )
 
 
-def train_epoch(train_data, classifier, num_per_batch, learning_rate, regularization):
-    for start_idx in range(0, len(train_data["features"]), num_per_batch):
+def train_epoch(train_data, classifier, batch_size, learning_rate, regularization):
+    for start_idx in range(0, len(train_data["features"]), batch_size):
         batch = {
-            name: array[start_idx : start_idx + num_per_batch]
+            name: array[start_idx : start_idx + batch_size]
             for name, array in train_data.items()
         }
         classifier.train_step(

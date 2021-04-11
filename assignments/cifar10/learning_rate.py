@@ -1,8 +1,16 @@
-def cyclic(*, low, high, half_cycle_size):
-    def result(num_examples_seen):
-        offset = num_examples_seen % half_cycle_size
-        if (num_examples_seen // half_cycle_size) % 2 == 0:
-            return low + (offset / half_cycle_size) * (high - low)
-        return high + (offset / half_cycle_size) * (low - high)
+from dataclasses import dataclass
 
-    return result
+
+@dataclass(frozen=True)
+class CyclicLearningRate:
+    low: float
+    high: float
+    batches_per_cycle: int
+
+    def learning_rate(self, batch_idx):
+        offset = (batch_idx % self.batches_per_cycle) * 2
+        if offset < self.batches_per_cycle:
+            return self.low + (offset / self.batches_per_cycle) * (self.high - self.low)
+        return self.high + (offset / self.batches_per_cycle - 1) * (
+            self.low - self.high
+        )
