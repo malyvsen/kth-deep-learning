@@ -1,19 +1,41 @@
+from typing import List, Callable
+from dataclasses import dataclass, replace
+from functools import reduce
 import numpy as np
-from crater import Tensor, Gradients
+from crater import Tensor, Gradients, Layer
 from crater.operations import matrix_multiply
 from crater.utils import one_hot
 
 
+@dataclass(frozen=True)
 class Classifier:
-    def __init__(self, normalize):
-        self.normalize = normalize
-        self.weights = Tensor.from_numpy(
-            np.random.normal(scale=0.01, size=[32 * 32 * 3, 10])
+    layers: List[Layer]
+    normalize: Callable[[np.ndarray], Tensor]
+
+    @classmethod
+    def from_dims(cls, hidden_dims, normalize):
+        return cls(
+            layers=[
+                Layer.from_dims(
+                    in_dim=in_dim,
+                    out_dim=out_dim,
+                    activation=lambda tensor: tensor.clip(low=0),
+                )
+                for in_dim, out_dim in zip(
+                    [3 * 32 * 32] + hidden_dims[:-1],
+                    hidden_dims,
+                )
+            ]
+            + [
+                Layer.from_dims(
+                    in_dim=hidden_dims[-1], out_dim=10, activation=lambda tensor: tensor
+                )
+            ],
+            normalize=normalize,
         )
-        self.biases = Tensor.from_numpy(np.random.normal(scale=0.01, size=[10]))
 
     def logits(self, data):
-        return matrix_multiply(self.normalize(data), self.weights) + self.biases
+        return reduce(lambda tensor, layer: layer(tensor), self.layers, data)
 
     def probabilities(self, data):
         return self.logits(data).softmax(-1)
@@ -26,8 +48,9 @@ class Classifier:
             ).sum()
             / Tensor.from_builtin(len(batch["features"]))
         )
-        penalty = (self.weights * self.weights).sum() * Tensor.from_builtin(
-            regularization
+        penalty = (
+            sum((layer.weights * layer.weights).sum() for layer in self.layers)
+            * regularization
         )
         return cross_entropy + penalty
 
@@ -42,9 +65,18 @@ class Classifier:
 
     def train_step(self, batch, regularization, learning_rate):
         gradients = self.gradients(batch, regularization)
-        self.weights = Tensor.from_numpy(
-            self.weights.data - gradients[self.weights] * learning_rate
-        )
-        self.biases = Tensor.from_numpy(
-            self.biases.data - gradients[self.biases] * learning_rate
+        return replace(
+            self,
+            layers=[
+                replace(
+                    layer,
+                    weights=Tensor.from_numpy(
+                        layer.weights.data - gradients[layer.weights] * learning_rate
+                    ),
+                    biases=Tensor.from_numpy(
+                        layer.biases.data - gradients[layer.biases] * learning_rate
+                    ),
+                )
+                for layer in self.layers
+            ],
         )
