@@ -26,8 +26,7 @@ class Experiment:
         accuracies = {}
 
         for batch_idx in trange(num_batches):
-            num_examples_seen = batch_idx * num_per_batch
-            start_idx = num_examples_seen % len(data["train"]["features"])
+            start_idx = (batch_idx * num_per_batch) % len(data["train"]["features"])
             batch = {
                 name: array[start_idx : start_idx + num_per_batch]
                 for name, array in data["train"].items()
@@ -36,7 +35,7 @@ class Experiment:
                 batch,
                 regularization=regularization,
                 learning_rate=(
-                    learning_rate(num_examples_seen)
+                    learning_rate(batch_idx)
                     if callable(learning_rate)
                     else learning_rate
                 ),
