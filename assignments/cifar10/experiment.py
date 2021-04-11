@@ -88,10 +88,6 @@ class Experiment:
             ],
         )
 
-    @property
-    def templates(self):
-        return vector_to_image(*self.classifier.weights.data.T)
-
 
 def train_epoch(train_data, classifier, num_per_batch, learning_rate, regularization):
     for start_idx in range(0, len(train_data["features"]), num_per_batch):

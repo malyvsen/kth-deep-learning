@@ -82,3 +82,13 @@ class Classifier:
                 for layer in self.layers
             ],
         )
+
+    @property
+    def templates(self):
+        return reduce(
+            lambda array, layer: np.matmul(
+                array - layer.biases.data, layer.weights.data.T
+            ),
+            self.layers[::-1],
+            one_hot(list(range(10)), num_classes=10).data,
+        )
