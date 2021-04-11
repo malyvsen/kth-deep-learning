@@ -53,6 +53,10 @@ class Experiment:
         return cls(classifier=classifier, losses=losses, accuracies=accuracies)
 
     @property
+    def final_accuracy(self):
+        return list(self.accuracies.values())[-1]["validation"]
+
+    @property
     def loss_plot(self):
         return self._plot("loss", self.losses)
 
