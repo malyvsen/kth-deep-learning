@@ -13,12 +13,11 @@ class Layer:
 
     @classmethod
     def from_dims(cls, in_dim, out_dim, activation):
-        scale = in_dim ** -0.5
         return cls(
             weights=Tensor.from_numpy(
-                np.random.normal(scale=scale, size=(in_dim, out_dim))
+                np.random.normal(scale=in_dim ** -0.5, size=(in_dim, out_dim))
             ),
-            biases=Tensor.from_numpy(np.random.normal(scale=scale, size=out_dim)),
+            biases=Tensor.from_numpy(np.zeros(out_dim)),
             activation=activation,
         )
 
