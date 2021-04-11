@@ -1,4 +1,4 @@
-from typing import Union, List, Callable
+from typing import Union, Dict, Callable
 from dataclasses import dataclass
 from tqdm.auto import trange
 import plotly.graph_objects as go
@@ -9,8 +9,8 @@ from .classifier import Classifier
 @dataclass(frozen=True)
 class Experiment:
     classifier: Classifier
-    losses: List[float]
-    accuracies: List[float]
+    losses: Dict[int, float]
+    accuracies: Dict[int, float]
 
     @classmethod
     def run(
@@ -22,8 +22,8 @@ class Experiment:
         learning_rate: Union[float, Callable[[int], float]] = 1e-3,
         regularization: float = 1e-3,
     ):
-        losses = []
-        accuracies = []
+        losses = {}
+        accuracies = {}
 
         for batch_idx in trange(num_batches):
             num_examples_seen = batch_idx * num_per_batch
@@ -41,54 +41,43 @@ class Experiment:
                     else learning_rate
                 ),
             )
-            losses.append(
-                {
+            if batch_idx % 10 == 0:
+                losses[batch_idx] = {
                     split_name: classifier.loss(
                         split, regularization=regularization
                     ).data
                     for split_name, split in data.items()
                 }
-            )
-            accuracies.append(
-                {
+                accuracies[batch_idx] = {
                     split_name: classifier.accuracy(split)
                     for split_name, split in data.items()
                 }
-            )
 
         return cls(classifier=classifier, losses=losses, accuracies=accuracies)
 
     @property
     def loss_plot(self):
-        return go.Figure(
-            layout=dict(
-                title="Training progress - loss",
-                xaxis_title="Batch number",
-                yaxis_title="Loss",
-            ),
-            data=[
-                go.Scatter(
-                    name=split_name.title(),
-                    y=[loss[split_name] for loss in self.losses],
-                )
-                for split_name in self.losses[0].keys()
-            ],
-        )
+        return self._plot("loss", self.losses)
 
     @property
     def accuracy_plot(self):
+        return self._plot("accuracy", self.accuracies)
+
+    @staticmethod
+    def _plot(name: str, series: Dict[int, float]):
         return go.Figure(
             layout=dict(
-                title="Training progress - accuracy",
+                title=f"Training progress - {name}",
                 xaxis_title="Batch number",
-                yaxis_title="Accuracy",
+                yaxis_title=name.title(),
             ),
             data=[
                 go.Scatter(
                     name=split_name.title(),
-                    y=[accuracy[split_name] for accuracy in self.accuracies],
+                    x=list(series.keys()),
+                    y=[accuracy[split_name] for accuracy in series.values()],
                 )
-                for split_name in self.accuracies[0].keys()
+                for split_name in series[0].keys()
             ],
         )
 
