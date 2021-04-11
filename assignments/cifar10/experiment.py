@@ -1,5 +1,6 @@
 from typing import List
 from dataclasses import dataclass
+from itertools import cycle
 from tqdm.auto import trange
 import plotly.graph_objects as go
 from .data import vector_to_image
@@ -17,7 +18,7 @@ class Experiment:
         cls,
         data,
         classifier: Classifier,
-        num_epochs: int = 16,
+        num_batches: int = 256,
         num_per_batch: int = 64,
         learning_rate: float = 1e-3,
         regularization: float = 1e-3,
@@ -25,13 +26,16 @@ class Experiment:
         losses = []
         accuracies = []
 
-        for epoch in trange(num_epochs):
-            train_epoch(
-                classifier=classifier,
-                train_data=data["train"],
-                num_per_batch=num_per_batch,
-                learning_rate=learning_rate,
-                regularization=regularization,
+        for start_idx, batch_idx in zip(
+            cycle(range(0, len(data["train"]["features"]), num_per_batch)),
+            trange(num_batches),
+        ):
+            batch = {
+                name: array[start_idx : start_idx + num_per_batch]
+                for name, array in data["train"].items()
+            }
+            classifier = classifier.train_step(
+                batch, regularization=regularization, learning_rate=learning_rate
             )
             losses.append(
                 {
@@ -55,7 +59,7 @@ class Experiment:
         return go.Figure(
             layout=dict(
                 title="Training progress - loss",
-                xaxis_title="Epoch number",
+                xaxis_title="Batch number",
                 yaxis_title="Loss",
             ),
             data=[
@@ -72,7 +76,7 @@ class Experiment:
         return go.Figure(
             layout=dict(
                 title="Training progress - accuracy",
-                xaxis_title="Epoch number",
+                xaxis_title="Batch number",
                 yaxis_title="Accuracy",
             ),
             data=[
