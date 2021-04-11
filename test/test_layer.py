@@ -24,5 +24,5 @@ def test_from_dims():
     """Does the layer not explode the magnitude of inputs?"""
     layer = Layer.from_dims(in_dim=10, out_dim=20, activation=lambda tensor: tensor)
     output = layer(np.random.normal(size=(100, 10)))
-    assert np.isclose(np.mean(output.data), 0, atol=1e-1)
-    assert np.isclose(np.std(output.data), 1, atol=1e-1)
+    assert np.isclose(np.mean(output.data), 0, atol=0.25)
+    assert np.isclose(np.std(output.data), 1, atol=0.25)
