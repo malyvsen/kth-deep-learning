@@ -28,6 +28,11 @@ with tempfile.TemporaryDirectory() as temp_dir:
         ]
     )
 
+    temp_html = temp_notebook.with_suffix(".html")
+    subprocess.run(["jupyter", "nbconvert", "--to", "html", temp_notebook.as_posix()])
+    shutil.copy(temp_html.as_posix(), build_dir / temp_html.name)
+
+
 with saved_script.open("r") as script:
     code = script.read()
 
