@@ -20,12 +20,22 @@ class Experiment:
         classifier: Classifier,
         learning_rate: CyclicLearningRate,
         num_cycles: int = 1,
-        batches_per_measurement: int = 10,
+        measurements_per_cycle: int = 10,
         batch_size: int = 100,
         regularization: float = 1e-3,
     ):
         losses = {}
         accuracies = {}
+
+        def evaluate():
+            losses[batch_idx] = {
+                split_name: classifier.loss(split, regularization=regularization).data
+                for split_name, split in data.items()
+            }
+            accuracies[batch_idx] = {
+                split_name: classifier.accuracy(split)
+                for split_name, split in data.items()
+            }
 
         for batch_idx in trange(learning_rate.batches_per_cycle * num_cycles):
             start_idx = (batch_idx * batch_size) % len(data["train"]["features"])
@@ -38,18 +48,15 @@ class Experiment:
                 regularization=regularization,
                 learning_rate=learning_rate.learning_rate(batch_idx),
             )
-            if batch_idx % batches_per_measurement == 0:
-                losses[batch_idx] = {
-                    split_name: classifier.loss(
-                        split, regularization=regularization
-                    ).data
-                    for split_name, split in data.items()
-                }
-                accuracies[batch_idx] = {
-                    split_name: classifier.accuracy(split)
-                    for split_name, split in data.items()
-                }
+            if (
+                measurements_per_cycle > 0
+                and batch_idx
+                % (learning_rate.batches_per_cycle // measurements_per_cycle)
+                == 0
+            ):
+                evaluate()
 
+        evaluate()
         return cls(classifier=classifier, losses=losses, accuracies=accuracies)
 
     @property
