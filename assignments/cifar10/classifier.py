@@ -13,7 +13,7 @@ class Classifier:
     normalize: Callable[[np.ndarray], Tensor]
 
     @classmethod
-    def from_dims(cls, hidden_dims, normalize):
+    def from_dims(cls, dims, normalize):
         return cls(
             layers=[
                 Layer.from_dims(
@@ -22,17 +22,16 @@ class Classifier:
                     activation=lambda tensor: tensor.clip(low=0),
                 )
                 for in_dim, out_dim in zip(
-                    [3 * 32 * 32] + hidden_dims[:-1],
-                    hidden_dims,
-                )
-            ]
-            + [
-                Layer.from_dims(
-                    in_dim=hidden_dims[-1], out_dim=10, activation=lambda tensor: tensor
+                    dims[:-1],
+                    dims[1:],
                 )
             ],
             normalize=normalize,
         )
+
+    @property
+    def num_classes(self):
+        return self.layers[-1].biases.shape[0]
 
     def logits(self, data):
         return reduce(
@@ -46,7 +45,7 @@ class Classifier:
         cross_entropy = -(
             (
                 self.probabilities(batch["features"]).log()
-                * one_hot(batch["labels"], num_classes=10)
+                * one_hot(batch["labels"], num_classes=self.num_classes)
             ).sum()
             / Tensor.from_builtin(len(batch["features"]))
         )
@@ -90,5 +89,5 @@ class Classifier:
                 array - layer.biases.data, layer.weights.data.T
             ),
             self.layers[::-1],
-            one_hot(list(range(10)), num_classes=10).data,
+            one_hot(list(range(self.num_classes)), num_classes=self.num_classes).data,
         )
