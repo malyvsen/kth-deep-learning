@@ -35,6 +35,10 @@ class Tensor:
     def shape(self):
         return self.data.shape
 
+    @property
+    def numpy(self):
+        return self.data.copy()
+
     def __eq__(self, other):
         return np.all(self.data == other.data) and self.shape == other.shape
 

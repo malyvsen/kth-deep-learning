@@ -54,3 +54,11 @@ def test_convert():
     assert tensor == Tensor.from_numpy(np.array([1, 2]))
     assert tensor == Tensor.from_builtin([1, 2])
     assert tensor is Tensor.convert(tensor)
+
+
+def test_numpy_copy():
+    tensor = Tensor.from_builtin([1, -1])
+    array = tensor.numpy
+    array[0] = 3
+    assert np.all(array == [3, -1])
+    assert tensor == Tensor.from_builtin([1, -1])
