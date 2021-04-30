@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "crater"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["malyvsen <5940672+malyvsen@users.noreply.github.com>"]
 
