@@ -1,5 +1,5 @@
 from typing import Union, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import numpy as np
 
 
@@ -38,6 +38,10 @@ class Tensor:
     @property
     def numpy(self):
         return self.data.copy()
+
+    @property
+    def no_backward(self):
+        return replace(self, backward=None)
 
     def __eq__(self, other):
         return np.all(self.data == other.data) and self.shape == other.shape

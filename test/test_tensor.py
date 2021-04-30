@@ -62,3 +62,10 @@ def test_numpy_copy():
     array[0] = 3
     assert np.all(array == [3, -1])
     assert tensor == Tensor.from_builtin([1, -1])
+
+
+def test_no_backward():
+    original = Tensor.from_builtin([1, 3, 2])
+    squared = original * original
+    assert squared.backward is not None
+    assert squared.no_backward.backward is None
