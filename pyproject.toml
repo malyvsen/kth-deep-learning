@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "kth-deep-learning"
+name = "crater"
 version = "0.1.0"
 description = ""
 authors = ["malyvsen <5940672+malyvsen@users.noreply.github.com>"]
