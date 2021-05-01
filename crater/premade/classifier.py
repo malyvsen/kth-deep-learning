@@ -23,7 +23,7 @@ class Classifier:
                 Layer.from_dims(
                     in_dim=in_dim,
                     out_dim=out_dim,
-                    activation=cls.make_activation(batch_norm),
+                    activation=cls._make_activation(batch_norm),
                 )
                 for in_dim, out_dim, batch_norm in zip(
                     dims[:-1],
@@ -94,7 +94,7 @@ class Classifier:
                     biases=(
                         layer.biases - gradients[layer.biases] * learning_rate
                     ).no_backward,
-                    activation=self.make_activation(batch_norm),
+                    activation=self._make_activation(batch_norm),
                 )
                 for layer, batch_norm in zip(self.layers, batch_normalizations)
             ],
