@@ -19,6 +19,7 @@ class BatchNormalization:
     class Mode(Enum):
         train = "train"
         test = "test"
+        disabled = "disabled"
 
     _mode = None
 
@@ -48,6 +49,8 @@ class BatchNormalization:
             )
         elif self._mode == self.Mode.test:
             normalized = (input - self.mean) / self.standard_deviation
+        elif self._mode == self.Mode.disabled:
+            return input
         else:
             raise ValueError(
                 "BatchNormalization must be called inside a BatchNormalization.mode context"

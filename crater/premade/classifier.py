@@ -79,18 +79,22 @@ class Classifier:
 
     def train_step(self, batch, regularization, learning_rate) -> "Classifier":
         gradients = self.gradients(batch, regularization)
-        batch_normalizations = [
-            replace(
-                batch_norm,
-                shift=(
-                    batch_norm.shift - gradients[batch_norm.shift] * learning_rate
-                ).no_backward,
-                scale=(
-                    batch_norm.scale - gradients[batch_norm.scale] * learning_rate
-                ).no_backward,
-            )
-            for batch_norm in self.batch_normalizations
-        ]
+        batch_normalizations = (
+            self.batch_normalizations
+            if BatchNormalization._mode == BatchNormalization.Mode.disabled
+            else [
+                replace(
+                    batch_norm,
+                    shift=(
+                        batch_norm.shift - gradients[batch_norm.shift] * learning_rate
+                    ).no_backward,
+                    scale=(
+                        batch_norm.scale - gradients[batch_norm.scale] * learning_rate
+                    ).no_backward,
+                )
+                for batch_norm in self.batch_normalizations
+            ]
+        )
         return replace(
             self,
             layers=[

@@ -19,6 +19,7 @@ class Experiment:
         data,
         classifier: Classifier,
         learning_rate: CyclicLearningRate,
+        batch_norm_mode: BatchNormalization.Mode,
         num_cycles: int = 1,
         measurements_per_cycle: int = 10,
         batch_size: int = 100,
@@ -51,7 +52,7 @@ class Experiment:
                 name: array[start_idx : start_idx + batch_size]
                 for name, array in permuted.items()
             }
-            with BatchNormalization.mode("train"):
+            with BatchNormalization.mode(batch_norm_mode):
                 classifier = classifier.train_step(
                     batch,
                     regularization=regularization,
