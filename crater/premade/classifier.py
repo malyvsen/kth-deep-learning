@@ -16,8 +16,11 @@ class Classifier:
     normalize: Callable[[np.ndarray], Tensor]
 
     @classmethod
-    def from_dims(cls, dims, normalize) -> "Classifier":
-        batch_normalizations = [BatchNormalization.from_shape(dim) for dim in dims[1:]]
+    def from_dims(cls, dims, normalize, persistence: float = None) -> "Classifier":
+        batch_normalizations = [
+            BatchNormalization.from_shape(dim, persistence=persistence)
+            for dim in dims[1:]
+        ]
         return cls(
             layers=[
                 Layer.from_dims(

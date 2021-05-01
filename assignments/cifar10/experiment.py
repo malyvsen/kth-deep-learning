@@ -1,8 +1,9 @@
 from typing import Dict
 from dataclasses import dataclass
+import numpy as np
 from tqdm.auto import trange
 import plotly.graph_objects as go
-from crater.premade import Classifier, CyclicLearningRate
+from crater.premade import Classifier, CyclicLearningRate, BatchNormalization
 from .data import vector_to_image
 
 
@@ -27,26 +28,35 @@ class Experiment:
         accuracies = {}
 
         def evaluate():
-            losses[batch_idx] = {
-                split_name: classifier.loss(split, regularization=regularization).data
-                for split_name, split in data.items()
-            }
-            accuracies[batch_idx] = {
-                split_name: classifier.accuracy(split)
-                for split_name, split in data.items()
-            }
+            with BatchNormalization.mode("test"):
+                losses[batch_idx] = {
+                    split_name: classifier.loss(
+                        split, regularization=regularization
+                    ).data
+                    for split_name, split in data.items()
+                }
+                accuracies[batch_idx] = {
+                    split_name: classifier.accuracy(split)
+                    for split_name, split in data.items()
+                }
 
         for batch_idx in trange(learning_rate.batches_per_cycle * num_cycles):
+            if batch_idx % (len(data["train"]["features"]) // batch_size) == 0:
+                permutation = np.random.permutation(len(data["train"]["features"]))
+                permuted = {
+                    name: array[permutation] for name, array in data["train"].items()
+                }
             start_idx = (batch_idx * batch_size) % len(data["train"]["features"])
             batch = {
                 name: array[start_idx : start_idx + batch_size]
-                for name, array in data["train"].items()
+                for name, array in permuted.items()
             }
-            classifier = classifier.train_step(
-                batch,
-                regularization=regularization,
-                learning_rate=learning_rate.learning_rate(batch_idx),
-            )
+            with BatchNormalization.mode("train"):
+                classifier = classifier.train_step(
+                    batch,
+                    regularization=regularization,
+                    learning_rate=learning_rate.learning_rate(batch_idx),
+                )
             if (
                 measurements_per_cycle > 0
                 and batch_idx
@@ -86,15 +96,4 @@ class Experiment:
                 )
                 for split_name in series[0].keys()
             ],
-        )
-
-
-def train_epoch(train_data, classifier, batch_size, learning_rate, regularization):
-    for start_idx in range(0, len(train_data["features"]), batch_size):
-        batch = {
-            name: array[start_idx : start_idx + batch_size]
-            for name, array in train_data.items()
-        }
-        classifier.train_step(
-            batch, regularization=regularization, learning_rate=learning_rate
         )
