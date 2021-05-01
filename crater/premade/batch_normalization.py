@@ -58,7 +58,7 @@ class BatchNormalization:
     @contextmanager
     def mode(cls, mode: Mode):
         old_mode = cls._mode
-        cls._mode = mode
+        cls._mode = cls.Mode(mode)
         yield
         cls._mode = old_mode
 
