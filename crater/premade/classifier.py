@@ -2,9 +2,10 @@ from typing import List, Callable
 from dataclasses import dataclass, replace
 from functools import reduce
 import numpy as np
-from crater import Tensor, Gradients, Layer
-from crater.operations import matrix_multiply
+from crater.tensor import Tensor
+from crater.gradient import Gradients, Gradient
 from crater.utils import one_hot
+from .layer import Layer
 
 
 @dataclass(frozen=True)
@@ -13,7 +14,7 @@ class Classifier:
     normalize: Callable[[np.ndarray], Tensor]
 
     @classmethod
-    def from_dims(cls, dims, normalize):
+    def from_dims(cls, dims, normalize) -> "Classifier":
         return cls(
             layers=[
                 Layer.from_dims(
@@ -30,18 +31,18 @@ class Classifier:
         )
 
     @property
-    def num_classes(self):
+    def num_classes(self) -> int:
         return self.layers[-1].biases.shape[0]
 
-    def logits(self, data):
+    def logits(self, data) -> Tensor:
         return reduce(
             lambda tensor, layer: layer(tensor), self.layers, self.normalize(data)
         )
 
-    def probabilities(self, data):
+    def probabilities(self, data) -> Tensor:
         return self.logits(data).softmax(-1)
 
-    def loss(self, batch, regularization):
+    def loss(self, batch, regularization) -> Tensor:
         cross_entropy = -(
             (
                 self.probabilities(batch["features"]).log()
@@ -55,16 +56,16 @@ class Classifier:
         )
         return cross_entropy + penalty
 
-    def gradients(self, batch, regularization):
+    def gradients(self, batch, regularization) -> Gradients:
         return Gradients.trace(self.loss(batch, regularization))
 
-    def predictions(self, data):
+    def predictions(self, data) -> np.ndarray:
         return np.argmax(self.logits(data).data, axis=-1)
 
-    def accuracy(self, batch):
+    def accuracy(self, batch) -> float:
         return np.mean(self.predictions(batch["features"]) == batch["labels"])
 
-    def train_step(self, batch, regularization, learning_rate):
+    def train_step(self, batch, regularization, learning_rate) -> "Classifier":
         gradients = self.gradients(batch, regularization)
         return replace(
             self,
@@ -83,7 +84,7 @@ class Classifier:
         )
 
     @property
-    def templates(self):
+    def templates(self) -> np.ndarray:
         return reduce(
             lambda array, layer: np.matmul(
                 array - layer.biases.data, layer.weights.data.T

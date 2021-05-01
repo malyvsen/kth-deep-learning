@@ -2,9 +2,8 @@ from typing import Dict
 from dataclasses import dataclass
 from tqdm.auto import trange
 import plotly.graph_objects as go
+from crater.premade import Classifier, CyclicLearningRate
 from .data import vector_to_image
-from .classifier import Classifier
-from .learning_rate import CyclicLearningRate
 
 
 @dataclass(frozen=True)
