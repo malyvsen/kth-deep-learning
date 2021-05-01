@@ -1,5 +1,6 @@
 import numpy as np
-from crater import Tensor, Layer
+from crater import Tensor
+from crater.premade import Layer
 
 
 def test_no_activation():

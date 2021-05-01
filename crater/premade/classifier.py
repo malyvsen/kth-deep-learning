@@ -6,27 +6,32 @@ from crater.tensor import Tensor
 from crater.gradient import Gradients, Gradient
 from crater.utils import one_hot
 from .layer import Layer
+from .batch_normalization import BatchNormalization
 
 
 @dataclass(frozen=True)
 class Classifier:
     layers: List[Layer]
+    batch_normalizations: List[BatchNormalization]
     normalize: Callable[[np.ndarray], Tensor]
 
     @classmethod
     def from_dims(cls, dims, normalize) -> "Classifier":
+        batch_normalizations = [BatchNormalization.from_shape(dim) for dim in dims[1:]]
         return cls(
             layers=[
                 Layer.from_dims(
                     in_dim=in_dim,
                     out_dim=out_dim,
-                    activation=lambda tensor: tensor.clip(low=0),
+                    activation=cls.make_activation(batch_norm),
                 )
-                for in_dim, out_dim in zip(
+                for in_dim, out_dim, batch_norm in zip(
                     dims[:-1],
                     dims[1:],
+                    batch_normalizations,
                 )
             ],
+            batch_normalizations=batch_normalizations,
             normalize=normalize,
         )
 
@@ -67,20 +72,33 @@ class Classifier:
 
     def train_step(self, batch, regularization, learning_rate) -> "Classifier":
         gradients = self.gradients(batch, regularization)
+        batch_normalizations = [
+            replace(
+                batch_norm,
+                shift=(
+                    batch_norm.shift - gradients[batch_norm.shift] * learning_rate
+                ).no_backward,
+                scale=(
+                    batch_norm.scale - gradients[batch_norm.scale] * learning_rate
+                ).no_backward,
+            )
+            for batch_norm in self.batch_normalizations
+        ]
         return replace(
             self,
             layers=[
-                replace(
-                    layer,
-                    weights=Tensor.from_numpy(
-                        layer.weights.data - gradients[layer.weights] * learning_rate
-                    ),
-                    biases=Tensor.from_numpy(
-                        layer.biases.data - gradients[layer.biases] * learning_rate
-                    ),
+                Layer(
+                    weights=(
+                        layer.weights - gradients[layer.weights] * learning_rate
+                    ).no_backward,
+                    biases=(
+                        layer.biases - gradients[layer.biases] * learning_rate
+                    ).no_backward,
+                    activation=self.make_activation(batch_norm),
                 )
-                for layer in self.layers
+                for layer, batch_norm in zip(self.layers, batch_normalizations)
             ],
+            batch_normalizations=batch_normalizations,
         )
 
     @property
@@ -92,3 +110,7 @@ class Classifier:
             self.layers[::-1],
             one_hot(list(range(self.num_classes)), num_classes=self.num_classes).data,
         )
+
+    @classmethod
+    def _make_activation(cls, batch_norm):
+        return lambda tensor: batch_norm(tensor).clip(low=0)
