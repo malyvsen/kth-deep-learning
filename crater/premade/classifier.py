@@ -19,16 +19,14 @@ class Classifier:
     def from_dims(cls, dims, normalize, persistence: float = None) -> "Classifier":
         batch_normalizations = [
             BatchNormalization.from_shape(dim, persistence=persistence)
-            for dim in dims[1:]
-        ]
+            for dim in dims[1:-1]
+        ] + [None]
         return cls(
             layers=[
                 Layer.from_dims(
                     in_dim=in_dim,
                     out_dim=out_dim,
-                    activation=cls._make_activation(batch_norm)
-                    if layer_idx < len(dims) - 2
-                    else batch_norm,
+                    activation=cls._make_activation(batch_norm),
                 )
                 for layer_idx, (in_dim, out_dim, batch_norm) in enumerate(
                     zip(
@@ -92,6 +90,8 @@ class Classifier:
                         batch_norm.scale - gradients[batch_norm.scale] * learning_rate
                     ).no_backward,
                 )
+                if batch_norm is not None
+                else None
                 for batch_norm in self.batch_normalizations
             ]
         )
@@ -124,4 +124,6 @@ class Classifier:
 
     @classmethod
     def _make_activation(cls, batch_norm):
+        if batch_norm is None:
+            return lambda tensor: tensor
         return lambda tensor: batch_norm(tensor).clip(low=0)
