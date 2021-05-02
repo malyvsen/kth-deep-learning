@@ -10,8 +10,9 @@ from crater.operations import coalesce
 @dataclass
 class BatchNormalization:
     mean: Annotated[np.ndarray, "Estimate of mean"]
-    standard_deviation: Annotated[np.ndarray, "Estimate of standard deviation"]
+    variance: Annotated[np.ndarray, "Estimate of variance"]
     persistence: float
+    epsilon = 2 ** -52
 
     shift: Tensor
     scale: Tensor
@@ -31,7 +32,7 @@ class BatchNormalization:
     ) -> "BatchNormalization":
         return cls(
             mean=np.zeros(shape),
-            standard_deviation=np.ones(shape),
+            variance=np.ones(shape),
             persistence=persistence if persistence is not None else 0.9,
             shift=Tensor.from_numpy(np.zeros(shape)),
             scale=Tensor.from_numpy(np.ones(shape)),
@@ -41,14 +42,14 @@ class BatchNormalization:
         input = coalesce(input)
         if self._mode == self.Mode.train:
             current_mean = np.mean(input.numpy, axis=0)
-            current_standard_deviation = np.std(input.numpy, axis=0)
-            normalized = (input - current_mean) / current_standard_deviation
-            self.mean = self._interpolate(self.mean, current_mean)
-            self.standard_deviation = self._interpolate(
-                self.standard_deviation, current_standard_deviation
+            current_variance = np.var(input.numpy, axis=0)
+            normalized = self._normalize(
+                input, mean=current_mean, variance=current_variance
             )
+            self.mean = self._interpolate(self.mean, current_mean)
+            self.variance = self._interpolate(self.variance, current_variance)
         elif self._mode == self.Mode.test:
-            normalized = (input - self.mean) / self.standard_deviation
+            normalized = self._normalize(input, mean=self.mean, variance=self.variance)
         elif self._mode == self.Mode.disabled:
             return input
         else:
@@ -67,3 +68,6 @@ class BatchNormalization:
 
     def _interpolate(self, estimate, current):
         return current + (estimate - current) * self.persistence
+
+    def _normalize(self, data, mean, variance):
+        return (data - mean) / (variance + self.epsilon) ** 0.5

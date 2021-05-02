@@ -22,7 +22,7 @@ def test_gradients():
     tensor = Tensor.from_builtin([[1, 2], [3, 4]])
     batch_norm = BatchNormalization(
         mean=np.array([4, -1]),
-        standard_deviation=np.array([1, 0.5]),
+        variance=np.array([1, 0.25]),
         persistence=0.9,
         shift=Tensor.from_builtin([3, 2]),
         scale=Tensor.from_builtin([1, 1]),
