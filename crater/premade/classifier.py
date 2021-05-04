@@ -28,12 +28,10 @@ class Classifier:
                     out_dim=out_dim,
                     activation=cls._make_activation(batch_norm),
                 )
-                for layer_idx, (in_dim, out_dim, batch_norm) in enumerate(
-                    zip(
-                        dims[:-1],
-                        dims[1:],
-                        batch_normalizations,
-                    )
+                for in_dim, out_dim, batch_norm in zip(
+                    dims[:-1],
+                    dims[1:],
+                    batch_normalizations,
                 )
             ],
             batch_normalizations=batch_normalizations,
