@@ -13,4 +13,5 @@ from .subtract import subtract
 from .softmax import softmax
 from .squeeze import squeeze
 from .sum import sum
+from .tanh import tanh
 from .tile import tile
