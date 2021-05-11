@@ -29,6 +29,10 @@ class Tensor:
             return thing
         if isinstance(thing, np.ndarray):
             return cls.from_numpy(thing)
+        if isinstance(thing, list):
+            return cls.from_numpy(
+                np.array([cls.convert(element).numpy for element in thing])
+            )
         return cls.from_builtin(thing)
 
     @property
