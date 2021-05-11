@@ -6,4 +6,4 @@ import numpy as np
 @dataclass(frozen=True)
 class Passage:
     context: np.ndarray
-    target: int
+    targets: np.ndarray

@@ -13,11 +13,11 @@ class Text:
         with open(path, "r", encoding="utf-8") as file:
             return cls(text=file.read())
 
-    def passages(self, context_length: int):
+    def passages(self, length: int):
         for idx in range(len(self.text)):
             yield Passage(
-                context=self.text_ids[idx - context_length : idx],
-                target=self.text_ids[idx],
+                context=self.text_ids[max(0, idx - length) : idx],
+                targets=self.text_ids[max(0, idx - length) + 1 : idx + 1],
             )
 
     @cached_property
