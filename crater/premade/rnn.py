@@ -14,13 +14,35 @@ class RNN:
     output_weights: Tensor
     output_biases: Tensor
 
+    @classmethod
+    def from_dims(cls, num_classes: int, hidden_dim: int) -> "RNN":
+        return cls(
+            hidden_weights=Tensor.from_numpy(
+                np.random.normal(
+                    scale=hidden_dim ** -0.5, size=(hidden_dim, hidden_dim)
+                )
+            ),
+            input_weights=Tensor.from_numpy(
+                np.random.normal(
+                    scale=num_classes ** -0.5, size=(num_classes, hidden_dim)
+                )
+            ),
+            hidden_biases=Tensor.from_numpy(np.zeros(hidden_dim)),
+            output_weights=Tensor.from_numpy(
+                np.random.normal(
+                    scale=hidden_dim ** -0.5, size=(hidden_dim, num_classes)
+                )
+            ),
+            output_biases=Tensor.from_numpy(np.zeros(num_classes)),
+        )
+
     @property
     def num_classes(self):
         return self.output_biases.shape[0]
 
     @property
     def initial_state(self) -> Tensor:
-        return Tensor.from_numpy(np.zeros_like(self.hidden_biases))
+        return Tensor.from_numpy(np.zeros(self.hidden_biases.shape))
 
     def run(self, initial_state: Tensor, sequences: List[np.ndarray]):
         """
