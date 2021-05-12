@@ -63,8 +63,8 @@ class RNN:
                 new_state_gradient=None,
                 output_gradient=None,
             )
-            states.append(state)
-            outputs.append(output)
+            states.append(state[0])
+            outputs.append(output[0])
         return states, outputs
 
     def run_backward(
@@ -77,8 +77,8 @@ class RNN:
             passage.context[::-1], states[-2::-1], output_gradients[::-1]
         ):
             state_gradient, param_gradient = self.step(
-                state=[prev_state],
-                input=[input],
+                state=np.array([prev_state]),
+                input=np.array([input]),
                 new_state_gradient=state_gradient,
                 output_gradient=output_gradient,
             )
@@ -145,20 +145,25 @@ class RNN:
             type(self)(
                 hidden_weights=hidden_weights_gradient,
                 input_weights=input_weights_gradient,
-                hidden_biases=pre_tanh_gradient,
+                hidden_biases=pre_tanh_gradient[0],
                 output_weights=output_weights_gradient,
-                output_biases=pre_softmax_gradient,
+                output_biases=pre_softmax_gradient[0],
             ),
         )
 
-    def loss(self, outputs: List[np.ndarray], targets: List[np.ndarray]):
+    def loss(self, outputs: List[np.ndarray], targets: List[int]):
         return -sum(
-            np.log(output_batch[np.arange(len(output_batch)), target_batch])
-            for output_batch, target_batch in zip(outputs, targets)
+            np.log(distribution[target])
+            for distribution, target in zip(outputs, targets)
         )
 
-    def loss_backward(self, outputs: List[np.ndarray], targets: List[np.ndarray]):
+    def loss_backward(self, outputs: List[np.ndarray], targets: List[int]):
+        def single_gradient(distribution: np.ndarray, target: int):
+            result = np.zeros_like(distribution)
+            result[target] = 1 / distribution[target]
+            return result
+
         return [
-            -1 / output_batch[np.arange(len(output_batch)), target_batch]
-            for output_batch, target_batch in zip(outputs, targets)
+            single_gradient(distribution, target)
+            for distribution, target in zip(outputs, targets)
         ]
