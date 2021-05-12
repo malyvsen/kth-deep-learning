@@ -160,7 +160,7 @@ class RNN:
     def loss_backward(self, outputs: List[np.ndarray], targets: List[int]):
         def single_gradient(distribution: np.ndarray, target: int):
             result = np.zeros_like(distribution)
-            result[target] = 1 / distribution[target]
+            result[target] = -1 / distribution[target]
             return result
 
         return [
