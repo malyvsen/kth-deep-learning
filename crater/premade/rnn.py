@@ -85,4 +85,4 @@ class RNN:
         return -sum(
             prediction.log() * one_hot(target, num_classes=self.num_classes)
             for prediction, target in zip(predictions, targets)
-        )
+        ).sum()

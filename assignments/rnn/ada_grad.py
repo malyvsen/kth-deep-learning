@@ -40,7 +40,7 @@ class AdaGrad:
                         / (magnitude + self.epsilon) ** 0.5
                         * gradients[getattr(self.network, name)]
                     ).no_backward
-                    for name, magnitude in magnitudes
+                    for name, magnitude in magnitudes.items()
                 }
             ),
             magnitudes=magnitudes,
