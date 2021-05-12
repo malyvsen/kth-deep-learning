@@ -14,7 +14,7 @@ class Text:
             return cls(text=file.read())
 
     def passages(self, length: int):
-        for idx in range(length, len(self.text) - 1):
+        for idx in range(length, len(self.text) - 1, length):
             yield Passage(
                 context=self.text_ids[idx - length : idx],
                 targets=self.text_ids[idx - length + 1 : idx + 1],
