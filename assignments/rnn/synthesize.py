@@ -1,18 +1,22 @@
 import numpy as np
 from .rnn import RNN
-from .text import Text
+from .tweets import Tweets
 
 
-def synthesize(network: RNN, training_text: Text, length: int):
+def synthesize(network: RNN, training_tweets: Tweets, length: int):
     state = [network.initial_state]
-    character_id = training_text.character_ids["."]
+    character_id = training_tweets.character_ids["."]
     result = []
-    for step in range(length):
+    for ttl in range(length, 0, -1):
         state, output = network.step(
-            state, [character_id], new_state_gradient=None, output_gradient=None
+            state=state,
+            input=[character_id],
+            ttl=[ttl],
+            new_state_gradient=None,
+            output_gradient=None,
         )
         character_id = np.random.choice(
-            list(training_text.character_ids.values()), p=output[0]
+            list(training_tweets.character_ids.values()), p=output[0]
         )
-        result.append(training_text.id_characters[character_id])
+        result.append(training_tweets.id_characters[character_id])
     return "".join(result)

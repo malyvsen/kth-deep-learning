@@ -1,11 +1,12 @@
 from typing import Dict
 from dataclasses import dataclass
-from .ada_grad import AdaGrad
-from .rnn import RNN
-from .text import Text
-from .synthesize import synthesize
+import itertools
 import plotly.graph_objects as go
 from tqdm.auto import trange
+from .ada_grad import AdaGrad
+from .rnn import RNN
+from .tweets import Tweets
+from .synthesize import synthesize
 
 
 @dataclass(frozen=True)
@@ -15,37 +16,28 @@ class Experiment:
     losses: Dict[int, str]
 
     @classmethod
-    def run(cls, text: Text, hidden_dim=100, num_steps=100_000, passage_length=25):
+    def run(cls, tweets: Tweets, hidden_dim=100, num_steps=100_000):
         ada_grad = AdaGrad.from_network(
-            RNN.from_dims(num_classes=text.num_unique_characters, hidden_dim=hidden_dim)
+            RNN.from_dims(
+                num_classes=tweets.num_unique_characters, hidden_dim=hidden_dim
+            )
         )
         samples = {}
         losses = {}
 
-        make_passages = lambda: text.passages(length=passage_length)
-        passages = make_passages()
         last_state = ada_grad.network.initial_state
-        for step in trange(num_steps):
-            if step % 10_000 == 0:
+        for step, tweet in zip(trange(num_steps), itertools.cycle(tweets)):
+            if step % 1000 == 0:
                 samples[step] = synthesize(
-                    ada_grad.network, training_text=text, length=200
+                    ada_grad.network, training_tweets=tweets, length=200
                 )
 
-            try:
-                passage = next(passages)
-            except StopIteration:
-                passages = make_passages()
-                last_state = ada_grad.network.initial_state
-                passage = next(passages)
-
             states, outputs = ada_grad.network.run(
-                initial_state=last_state, passage=passage
+                initial_state=last_state, tweet=tweet
             )
-            losses[step] = ada_grad.network.loss(
-                outputs=outputs, targets=passage.targets
-            )
+            losses[step] = ada_grad.network.loss(outputs=outputs, targets=tweet.targets)
             gradients = ada_grad.network.run_backward(
-                states=states, outputs=outputs, passage=passage
+                states=states, outputs=outputs, tweet=tweet
             )
             ada_grad = ada_grad.step(gradients)
             last_state = states[-1]
