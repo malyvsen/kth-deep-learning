@@ -16,7 +16,7 @@ class Tweets:
 
     def __iter__(self):
         for text in self.texts:
-            yield Tweet(character_ids=[self.character_ids[char] for char in text])
+            yield Tweet.full(character_ids=[self.character_ids[char] for char in text])
 
     @cached_property
     def num_unique_characters(self):

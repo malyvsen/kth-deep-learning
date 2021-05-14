@@ -7,11 +7,11 @@ def synthesize(network: RNN, training_tweets: Tweets, length: int):
     state = [network.initial_state]
     character_id = training_tweets.character_ids["."]
     result = []
-    for ttl in range(length, 0, -1):
+    for char_count in range(0, length):
         state, output = network.step(
             state=state,
             input=[character_id],
-            ttl=[ttl],
+            char_count=[char_count],
             new_state_gradient=None,
             output_gradient=None,
         )

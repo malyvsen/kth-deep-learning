@@ -16,6 +16,7 @@ from .tweet import Tweet
 class RNN:
     hidden_weights: np.ndarray
     input_weights: np.ndarray
+    char_count_weights: np.ndarray
     hidden_biases: np.ndarray
     output_weights: np.ndarray
     output_biases: np.ndarray
@@ -29,6 +30,7 @@ class RNN:
             input_weights=np.random.normal(
                 scale=num_classes ** -0.5, size=(num_classes, hidden_dim)
             ),
+            char_count_weights=np.random.normal(scale=1 / 70, size=hidden_dim),
             hidden_biases=np.zeros(hidden_dim),
             output_weights=np.random.normal(
                 scale=hidden_dim ** -0.5, size=(hidden_dim, num_classes)
@@ -56,11 +58,11 @@ class RNN:
         """
         states = [initial_state]
         outputs = []
-        for ttl, input in zip(tweet.ttls, tweet.context):
+        for char_count, input in zip(tweet.char_counts, tweet.context):
             state, output = self.step(
                 state=[states[-1]],
                 input=[input],
-                ttl=[ttl],
+                char_count=[char_count],
                 new_state_gradient=None,
                 output_gradient=None,
             )
@@ -74,13 +76,13 @@ class RNN:
         result = {key: 0 for key in asdict(self)}
         output_gradients = self.loss_backward(outputs=outputs, targets=tweet.targets)
         state_gradient = 0
-        for input, ttl, prev_state, output_gradient in reversed(
-            list(zip(tweet.context, tweet.ttls, states[:-1], output_gradients))
+        for input, char_count, prev_state, output_gradient in reversed(
+            list(zip(tweet.context, tweet.char_counts, states[:-1], output_gradients))
         ):
             state_gradient, param_gradient = self.step(
                 state=np.array([prev_state]),
                 input=np.array([input]),
-                ttl=np.array([ttl]),
+                char_count=np.array([char_count]),
                 new_state_gradient=state_gradient,
                 output_gradient=output_gradient,
             )
@@ -94,7 +96,7 @@ class RNN:
         self,
         state: np.ndarray,
         input: np.ndarray,
-        ttl: np.ndarray,
+        char_count: np.ndarray,
         new_state_gradient: np.ndarray,
         output_gradient: np.ndarray,
     ):
@@ -103,7 +105,7 @@ class RNN:
         Takes:
         * state (batch_size, state_size)
         * input (batch_size,)
-        * ttl (batch_size,)
+        * char_count (batch_size,)
         * gradient wrt new state (batch_size, state_size)
         * gradient wrt output (batch_size, num_classes)
         Returns:
@@ -118,7 +120,7 @@ class RNN:
             + np.matmul(
                 one_hot(input, num_classes=self.num_classes), self.input_weights
             )
-            + np.expand_dims(ttl, 1)
+            + char_count * self.char_count_weights
             + self.hidden_biases
         )
         new_state = tanh(pre_tanh)
@@ -150,9 +152,10 @@ class RNN:
             type(self)(
                 hidden_weights=hidden_weights_gradient,
                 input_weights=input_weights_gradient,
-                hidden_biases=pre_tanh_gradient[0],
+                char_count_weights=(pre_tanh_gradient * char_count).sum(1),
+                hidden_biases=pre_tanh_gradient.sum(1),
                 output_weights=output_weights_gradient,
-                output_biases=pre_softmax_gradient[0],
+                output_biases=pre_softmax_gradient.sum(1),
             ),
         )
 
