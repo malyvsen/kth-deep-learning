@@ -50,7 +50,6 @@ class TrainBatchNorm(BatchNorm):
     def backward(self, gradient: np.ndarray, input: np.ndarray, **kwargs):
         current_mean = np.mean(input, axis=0)
         current_variance = np.var(input, axis=0)
-        variance_multiplier = (current_variance + self.epsilon) ** -0.5
         normalized = self._normalize(
             input, mean=current_mean, variance=current_variance
         )
@@ -59,7 +58,18 @@ class TrainBatchNorm(BatchNorm):
                 shift=np.sum(gradient, axis=0),
                 scale=np.sum(gradient * normalized, axis=0),
             ),
-            gradient * self.scale * variance_multiplier,
+            (
+                self.scale
+                * (current_variance + self.epsilon) ** -0.5
+                * (
+                    len(input) * gradient
+                    - np.sum(gradient, axis=0)
+                    - (input - current_mean)
+                    / (current_variance + self.epsilon)
+                    * np.sum(gradient * (input - current_mean), axis=0)
+                )
+                / len(input)
+            ),
         )
 
     @property
@@ -76,7 +86,7 @@ class TrainBatchNorm(BatchNorm):
         return current + (estimate - current) * self.persistence
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)  # cannot inherit frozen dataclass from a non-frozen one
 class TestBatchNorm(BatchNorm):
     def forward(self, input: np.ndarray):
         normalized = self._normalize(input, mean=self.mean, variance=self.variance)

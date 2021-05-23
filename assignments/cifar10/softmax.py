@@ -8,6 +8,8 @@ class Softmax:
         exp_input = np.exp(input)
         return exp_input / exp_input.sum(axis=1, keepdims=True)
 
-    def backward(self, gradient: np.ndarray, input: np.ndarray):
+    def backward(self, gradient: np.ndarray, input: np.ndarray, **kwargs):
         output = self.forward(input)
-        return output * (gradient - np.sum(gradient * output, axis=1))
+        return type(self)(), output * (
+            gradient - np.sum(gradient * output, axis=1, keepdims=True)
+        )

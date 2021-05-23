@@ -19,7 +19,7 @@ class Stack:
                 gradient=output_gradient, input=input, **kwargs
             )
             step_gradients.append(step_gradient)
-        return type(self)(steps=step_gradients)
+        return Stack(steps=tuple(reversed(step_gradients))), output_gradient
 
     def _full_forward(self, input: np.ndarray):
         outputs = [input]

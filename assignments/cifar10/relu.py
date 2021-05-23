@@ -7,7 +7,7 @@ class ReLU:
     def forward(self, input: np.ndarray):
         return np.maximum(input, 0)
 
-    def backward(self, gradient: np.ndarray, input: np.ndarray):
+    def backward(self, gradient: np.ndarray, input: np.ndarray, **kwargs):
         result = gradient.copy()
         result[input < 0] = 0
-        return result
+        return type(self)(), result

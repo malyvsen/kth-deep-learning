@@ -18,13 +18,15 @@ class Classifier(Stack):
         dims: List[int],
         make_hidden_layer,
         make_final_layer,
+        normalize,
     ):
         return cls(
             steps=[
                 make_hidden_layer(in_dim, out_dim)
                 for in_dim, out_dim in zip(dims[:-2], dims[1:-1])
             ]
-            + [make_final_layer(dims[-2], dims[-1])]
+            + [make_final_layer(dims[-2], dims[-1])],
+            normalize=normalize,
         )
 
     @classmethod
@@ -45,12 +47,13 @@ class Classifier(Stack):
         )
 
     def loss(self, outputs: np.ndarray, targets: List[int]):
+        """Does not include regularization"""
         return np.log(outputs[np.arange(outputs.shape[0]), targets]).sum()
 
     def loss_backward(self, outputs: np.ndarray, targets: List[int]):
         def single_gradient(distribution: np.ndarray, target: int):
             result = np.zeros_like(distribution)
-            result[target] = -1 / distribution[target]
+            result[target] = 1 / distribution[target]
             return result
 
         return np.array(
@@ -60,9 +63,11 @@ class Classifier(Stack):
             ]
         )
 
-    def gradient(self, input: np.ndarray, targets: List[int]):
+    def gradient(self, input: np.ndarray, targets: List[int], **kwargs):
         outputs = self.forward(input)
-        return self.backward(self.loss_backward(outputs, targets), input=input)
+        return self.backward(
+            self.loss_backward(outputs, targets), input=input, **kwargs
+        )
 
     def _full_forward(self, input: np.ndarray):
         normalized_input = self.normalize(input)
