@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import numpy as np
-from .operations import matmul_backward
 
 
 class Layer:
@@ -56,3 +55,10 @@ class BiasedLayer(Layer):
             ),
             input_gradient,
         )
+
+
+def matmul_backward(gradient: np.ndarray, left: np.ndarray, right: np.ndarray):
+    return (
+        np.matmul(gradient, right.T),  # gradient wrt left operand
+        np.matmul(left.T, gradient),  # gradient wrt right operand
+    )

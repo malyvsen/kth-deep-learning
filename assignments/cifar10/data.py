@@ -2,7 +2,6 @@ from pathlib import Path
 import pickle
 import numpy as np
 from PIL import Image
-from crater import Tensor
 
 
 def load_batch(filename: str):
@@ -14,7 +13,7 @@ def load_batch(filename: str):
 def make_normalizer(train_features: np.ndarray):
     mean = np.mean(train_features)
     std = np.std(train_features)
-    return lambda features: Tensor.from_numpy((features - mean) / std)
+    return lambda features: (features - mean) / std
 
 
 def vector_to_image(*vectors: np.ndarray):

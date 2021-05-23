@@ -1,19 +1,23 @@
-from typing import List
+from typing import List, Callable
 from dataclasses import dataclass
+import numpy as np
 from .stack import Stack
 from .layers import PureLayer, BiasedLayer
 from .relu import ReLU
+from .softmax import Softmax
 from .batch_norm import TrainBatchNorm
 
 
 @dataclass(frozen=True)
 class Classifier(Stack):
+    normalize: Callable[[np.ndarray], np.ndarray]
+
     @classmethod
     def from_dims(
         cls,
         dims: List[int],
         make_hidden_layer,
-        make_final_layer=BiasedLayer.xavier,
+        make_final_layer,
     ):
         return cls(
             steps=[
@@ -24,18 +28,42 @@ class Classifier(Stack):
         )
 
     @classmethod
-    def hidden_layer_maker(cls, batch_norm=True):
+    def layer_maker(cls, activation, batch_norm: bool):
         if batch_norm:
             return lambda in_dim, out_dim: Stack(
                 steps=[
                     PureLayer.xavier(in_dim, out_dim),
                     TrainBatchNorm.no_op(out_dim),
-                    ReLU(),
+                    activation(),
                 ]
             )
         return lambda in_dim, out_dim: Stack(
             steps=[
                 BiasedLayer.xavier(in_dim, out_dim),
-                ReLU(),
+                activation(),
             ]
         )
+
+    def loss(self, outputs: np.ndarray, targets: List[int]):
+        return np.log(outputs[np.arange(outputs.shape[0]), targets]).sum()
+
+    def loss_backward(self, outputs: np.ndarray, targets: List[int]):
+        def single_gradient(distribution: np.ndarray, target: int):
+            result = np.zeros_like(distribution)
+            result[target] = -1 / distribution[target]
+            return result
+
+        return np.array(
+            [
+                single_gradient(distribution, target)
+                for distribution, target in zip(outputs, targets)
+            ]
+        )
+
+    def gradient(self, input: np.ndarray, targets: List[int]):
+        outputs = self.forward(input)
+        return self.backward(self.loss_backward(outputs, targets), input=input)
+
+    def _full_forward(self, input: np.ndarray):
+        normalized_input = self.normalize(input)
+        return super()._full_forward(normalized_input)

@@ -1,10 +1,11 @@
-from typing import Dict
+from typing import Dict, Any
 from dataclasses import dataclass
 import numpy as np
 from tqdm.auto import trange
 import plotly.graph_objects as go
-from crater.premade import Classifier, CyclicLearningRate, BatchNormalization
-from .data import vector_to_image
+from .classifier import Classifier
+from .sgd import sgd
+from .cyclic_learning_rate import CyclicLearningRate
 
 
 @dataclass(frozen=True)
@@ -19,27 +20,23 @@ class Experiment:
         data,
         classifier: Classifier,
         learning_rate: CyclicLearningRate,
-        batch_norm_mode: BatchNormalization.Mode,
+        loss_params: Dict[str, Any],
         num_cycles: int = 1,
         measurements_per_cycle: int = 10,
         batch_size: int = 100,
-        regularization: float = 1e-3,
     ):
         losses = {}
         accuracies = {}
 
         def evaluate():
-            with BatchNormalization.mode("test"):
-                losses[batch_idx] = {
-                    split_name: classifier.loss(
-                        split, regularization=regularization
-                    ).data
-                    for split_name, split in data.items()
-                }
-                accuracies[batch_idx] = {
-                    split_name: classifier.accuracy(split)
-                    for split_name, split in data.items()
-                }
+            losses[batch_idx] = {
+                split_name: classifier.test.loss(split, **loss_params).data
+                for split_name, split in data.items()
+            }
+            accuracies[batch_idx] = {
+                split_name: classifier.test.accuracy(split)
+                for split_name, split in data.items()
+            }
 
         for batch_idx in trange(learning_rate.batches_per_cycle * num_cycles):
             if batch_idx % (len(data["train"]["features"]) // batch_size) == 0:
@@ -52,12 +49,11 @@ class Experiment:
                 name: array[start_idx : start_idx + batch_size]
                 for name, array in permuted.items()
             }
-            with BatchNormalization.mode(batch_norm_mode):
-                classifier = classifier.train_step(
-                    batch,
-                    regularization=regularization,
-                    learning_rate=learning_rate.learning_rate(batch_idx),
-                )
+            classifier = sgd(
+                classifier,
+                gradient=classifier.gradient(batch["data"], batch["labels"]),
+                learning_rate=learning_rate.learning_rate(batch_idx),
+            )
             if (
                 measurements_per_cycle > 0
                 and batch_idx
