@@ -11,7 +11,7 @@ from .cyclic_learning_rate import CyclicLearningRate
 @dataclass(frozen=True)
 class Experiment:
     classifier: Classifier
-    losses: Dict[int, float]
+    costs: Dict[int, float]
     accuracies: Dict[int, float]
 
     @classmethod
@@ -20,22 +20,32 @@ class Experiment:
         data,
         classifier: Classifier,
         learning_rate: CyclicLearningRate,
-        loss_params: Dict[str, Any],
+        regularization: float,
         num_cycles: int = 1,
         measurements_per_cycle: int = 10,
         batch_size: int = 100,
     ):
-        losses = {}
+        costs = {}
         accuracies = {}
 
         def evaluate():
-            losses[batch_idx] = {
-                split_name: classifier.test.loss(split, **loss_params).data
+            predictions = {
+                split_name: classifier.test.forward(split["features"])
                 for split_name, split in data.items()
             }
+            costs[batch_idx] = {
+                split_name: classifier.test.cost(
+                    prediction, split["labels"], regularization=regularization
+                )
+                for split_name, split, prediction in zip(
+                    data.keys(), data.values(), predictions.values()
+                )
+            }
             accuracies[batch_idx] = {
-                split_name: classifier.test.accuracy(split)
-                for split_name, split in data.items()
+                split_name: (np.argmax(prediction, axis=1) == split["labels"]).mean()
+                for split_name, split, prediction in zip(
+                    data.keys(), data.values(), predictions.values()
+                )
             }
 
         for batch_idx in trange(learning_rate.batches_per_cycle * num_cycles):
@@ -51,7 +61,9 @@ class Experiment:
             }
             classifier = sgd(
                 classifier,
-                gradient=classifier.gradient(batch["data"], batch["labels"]),
+                gradient=classifier.gradient(
+                    batch["features"], batch["labels"], regularization=regularization
+                ),
                 learning_rate=learning_rate.learning_rate(batch_idx),
             )
             if (
@@ -63,15 +75,15 @@ class Experiment:
                 evaluate()
 
         evaluate()
-        return cls(classifier=classifier, losses=losses, accuracies=accuracies)
+        return cls(classifier=classifier, costs=costs, accuracies=accuracies)
 
     @property
     def final_accuracy(self):
         return list(self.accuracies.values())[-1]["validation"]
 
     @property
-    def loss_plot(self):
-        return self._plot("loss", self.losses)
+    def cost_plot(self):
+        return self._plot("cost", self.costs)
 
     @property
     def accuracy_plot(self):

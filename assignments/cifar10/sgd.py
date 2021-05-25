@@ -1,18 +1,26 @@
-from dataclasses import asdict, replace
+from collections.abc import Iterable
+from dataclasses import fields, replace
 import numpy as np
 
 
 def sgd(function, gradient, learning_rate: float):
     if isinstance(gradient, np.ndarray):
         return function - gradient * learning_rate
+    if isinstance(gradient, Iterable):
+        return type(function)(
+            [
+                sgd(function=sub_func, gradient=sub_grad, learning_rate=learning_rate)
+                for sub_func, sub_grad in zip(function, gradient)
+            ]
+        )
     return replace(
         function,
         **{
-            name: sgd(
-                function=getattr(function, name),
-                gradient=value,
+            field.name: sgd(
+                function=getattr(function, field.name),
+                gradient=getattr(gradient, field.name),
                 learning_rate=learning_rate,
             )
-            for name, value in asdict(gradient).items()
-        }
+            for field in fields(gradient)
+        },
     )

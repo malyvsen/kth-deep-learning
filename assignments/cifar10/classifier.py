@@ -2,7 +2,7 @@ from typing import List, Callable
 from dataclasses import dataclass
 import numpy as np
 from .stack import Stack
-from .layers import PureLayer, BiasedLayer
+from .layers import Layer, PureLayer, BiasedLayer
 from .relu import ReLU
 from .softmax import Softmax
 from .batch_norm import TrainBatchNorm
@@ -21,11 +21,13 @@ class Classifier(Stack):
         normalize,
     ):
         return cls(
-            steps=[
-                make_hidden_layer(in_dim, out_dim)
-                for in_dim, out_dim in zip(dims[:-2], dims[1:-1])
-            ]
-            + [make_final_layer(dims[-2], dims[-1])],
+            steps=tuple(
+                [
+                    make_hidden_layer(in_dim, out_dim)
+                    for in_dim, out_dim in zip(dims[:-2], dims[1:-1])
+                ]
+                + [make_final_layer(dims[-2], dims[-1])]
+            ),
             normalize=normalize,
         )
 
@@ -48,12 +50,12 @@ class Classifier(Stack):
 
     def loss(self, outputs: np.ndarray, targets: List[int]):
         """Does not include regularization"""
-        return np.log(outputs[np.arange(outputs.shape[0]), targets]).sum()
+        return -np.log(outputs[np.arange(outputs.shape[0]), targets]).mean()
 
     def loss_backward(self, outputs: np.ndarray, targets: List[int]):
         def single_gradient(distribution: np.ndarray, target: int):
             result = np.zeros_like(distribution)
-            result[target] = 1 / distribution[target]
+            result[target] = -1 / distribution[target] / len(outputs)
             return result
 
         return np.array(
@@ -65,8 +67,18 @@ class Classifier(Stack):
 
     def gradient(self, input: np.ndarray, targets: List[int], **kwargs):
         outputs = self.forward(input)
-        return self.backward(
+        self_gradient, input_gradient = self.backward(
             self.loss_backward(outputs, targets), input=input, **kwargs
+        )
+        return self_gradient
+
+    def cost(self, outputs: np.ndarray, targets: List[int], regularization: float):
+        """Loss + regularization penalty"""
+        return self.loss(outputs, targets) + regularization * sum(
+            np.sum(step.weights ** 2)
+            for layer in self.steps
+            for step in layer.steps
+            if isinstance(step, Layer)
         )
 
     def _full_forward(self, input: np.ndarray):

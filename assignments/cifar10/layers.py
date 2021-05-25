@@ -26,7 +26,7 @@ class PureLayer(Layer):
         )
         return (
             type(self)(
-                weights=weights_gradient - 2 * kwargs["regularization"] * self.weights
+                weights=weights_gradient + 2 * kwargs["regularization"] * self.weights
             ),
             input_gradient,
         )
@@ -52,7 +52,7 @@ class BiasedLayer(Layer):
         )
         return (
             type(self)(
-                weights=weights_gradient - 2 * kwargs["regularization"] * self.weights,
+                weights=weights_gradient + 2 * kwargs["regularization"] * self.weights,
                 biases=gradient.sum(axis=0),
             ),
             input_gradient,
